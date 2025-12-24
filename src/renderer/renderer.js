@@ -96,6 +96,115 @@ function setTheme(theme) {
 
 function handleMenuCommand(channel) {
   switch (channel) {
+    // 文件菜单
+    case 'file-new':
+      editor.value = '';
+      editor.focus();
+      renderMarkdown('');
+      break;
+    case 'file-new-window':
+      alert('“新建窗口”功能待实现。');
+      break;
+    case 'file-open':
+      alert('“打开文件”功能待实现。');
+      break;
+    case 'file-open-folder':
+      alert('“打开文件夹”功能待实现。');
+      break;
+    case 'file-quick-open':
+      alert('“快速打开”功能待实现。');
+      break;
+    case 'file-save':
+      alert('“保存文件”功能待实现。');
+      break;
+    case 'file-save-as':
+      alert('“另存为”功能待实现。');
+      break;
+    case 'file-move-to':
+      alert('“移动到”功能待实现。');
+      break;
+    case 'file-save-all':
+      alert('“保存全部打开的文件”功能待实现。');
+      break;
+    case 'file-properties':
+      alert('“文件属性”功能待实现。');
+      break;
+    case 'file-open-location':
+      alert('“打开文件位置”功能待实现。');
+      break;
+    case 'file-show-sidebar':
+      alert('“在侧边栏中显示”功能待实现。');
+      break;
+    case 'file-delete':
+      alert('“删除文件”功能待实现。');
+      break;
+    case 'file-import-word':
+      alert('“从 Word 导入”功能待实现。');
+      break;
+    case 'file-import-html':
+      alert('“从 HTML 导入”功能待实现。');
+      break;
+    case 'file-export-pdf':
+      alert('“导出为 PDF”功能待实现。');
+      break;
+    case 'file-export-html':
+      alert('“导出为 HTML”功能待实现。');
+      break;
+    case 'file-export-html-plain':
+      alert('“导出为 HTML (without styles)”功能待实现。');
+      break;
+    case 'file-export-image':
+      alert('“导出为图像”功能待实现。');
+      break;
+    case 'file-export-docx':
+      alert('“导出为 Word (.docx)”功能待实现。');
+      break;
+    case 'file-export-odt':
+      alert('“导出为 OpenOffice”功能待实现。');
+      break;
+    case 'file-export-rtf':
+      alert('“导出为 RTF”功能待实现。');
+      break;
+    case 'file-export-epub':
+      alert('“导出为 Epub”功能待实现。');
+      break;
+    case 'file-export-latex':
+      alert('“导出为 LaTeX”功能待实现。');
+      break;
+    case 'file-export-mediawiki':
+      alert('“导出为 Media Wiki”功能待实现。');
+      break;
+    case 'file-export-rst':
+      alert('“导出为 reStructuredText”功能待实现。');
+      break;
+    case 'file-export-textile':
+      alert('“导出为 Textile”功能待实现。');
+      break;
+    case 'file-export-opml':
+      alert('“导出为 OPML”功能待实现。');
+      break;
+    case 'file-export-last':
+      alert('“使用上一次设置导出”功能待实现。');
+      break;
+    case 'file-export-overwrite':
+      alert('“导出并覆盖上一次导出的文件”功能待实现。');
+      break;
+    case 'file-export-settings':
+      alert('“导出设置”功能待实现。');
+      break;
+    case 'file-print':
+      alert('“打印”功能待实现。');
+      break;
+    case 'file-preferences':
+      alert('“偏好设置”功能待实现。');
+      break;
+    case 'file-close':
+      if (confirm('确定要关闭当前文件吗？')) {
+        editor.value = '';
+        renderMarkdown('');
+      }
+      break;
+    // 编辑菜单
     case 'edit-copy-image':
       alert('“拷贝图片”功能待实现。');
       break;
@@ -412,9 +521,39 @@ function handleMenuCommand(channel) {
 // 监听主进程发送的菜单命令
 const channels = [
   'file-new',
+  'file-new-window',
   'file-open',
+  'file-open-folder',
+  'file-quick-open',
   'file-save',
   'file-save-as',
+  'file-move-to',
+  'file-save-all',
+  'file-properties',
+  'file-open-location',
+  'file-show-sidebar',
+  'file-delete',
+  'file-import-word',
+  'file-import-html',
+  'file-export-pdf',
+  'file-export-html',
+  'file-export-html-plain',
+  'file-export-image',
+  'file-export-docx',
+  'file-export-odt',
+  'file-export-rtf',
+  'file-export-epub',
+  'file-export-latex',
+  'file-export-mediawiki',
+  'file-export-rst',
+  'file-export-textile',
+  'file-export-opml',
+  'file-export-last',
+  'file-export-overwrite',
+  'file-export-settings',
+  'file-print',
+  'file-preferences',
+  'file-close',
   'edit-copy-image',
   'edit-copy-plain',
   'edit-copy-md',

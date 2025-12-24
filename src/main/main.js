@@ -29,12 +29,64 @@ function createAppMenu() {
       label: '文件(F)',
       submenu: [
         { label: '新建', accelerator: 'Ctrl+N', click: () => sendToRenderer('file-new') },
+        { label: '新建窗口', accelerator: 'Ctrl+Shift+N', click: () => sendToRenderer('file-new-window') },
+        { type: 'separator' },
         { label: '打开...', accelerator: 'Ctrl+O', click: () => sendToRenderer('file-open') },
+        { label: '打开文件夹...', click: () => sendToRenderer('file-open-folder') },
+        { type: 'separator' },
+        { label: '快速打开...', accelerator: 'Ctrl+P', click: () => sendToRenderer('file-quick-open') },
+        {
+          label: '打开最近文件',
+          submenu: [
+            { label: '（暂无最近文件）', enabled: false }
+          ]
+        },
         { type: 'separator' },
         { label: '保存', accelerator: 'Ctrl+S', click: () => sendToRenderer('file-save') },
         { label: '另存为...', accelerator: 'Ctrl+Shift+S', click: () => sendToRenderer('file-save-as') },
+        { label: '移动到...', click: () => sendToRenderer('file-move-to') },
+        { label: '保存全部打开的文件...', click: () => sendToRenderer('file-save-all') },
         { type: 'separator' },
-        { role: 'quit', label: '关闭' }
+        { label: '属性...', click: () => sendToRenderer('file-properties') },
+        { label: '打开文件位置...', click: () => sendToRenderer('file-open-location') },
+        { label: '在侧边栏中显示', click: () => sendToRenderer('file-show-sidebar') },
+        { label: '删除...', click: () => sendToRenderer('file-delete') },
+        { type: 'separator' },
+        {
+          label: '导入...',
+          submenu: [
+            { label: '从 Word 导入...', click: () => sendToRenderer('file-import-word') },
+            { label: '从 HTML 导入...', click: () => sendToRenderer('file-import-html') }
+          ]
+        },
+        {
+          label: '导出',
+          submenu: [
+            { label: 'PDF', click: () => sendToRenderer('file-export-pdf') },
+            { label: 'HTML', click: () => sendToRenderer('file-export-html') },
+            { label: 'HTML (without styles)', click: () => sendToRenderer('file-export-html-plain') },
+            { label: '图像', click: () => sendToRenderer('file-export-image') },
+            { type: 'separator' },
+            { label: 'Word (.docx)', click: () => sendToRenderer('file-export-docx') },
+            { label: 'OpenOffice', click: () => sendToRenderer('file-export-odt') },
+            { label: 'RTF', click: () => sendToRenderer('file-export-rtf') },
+            { label: 'Epub', click: () => sendToRenderer('file-export-epub') },
+            { label: 'LaTeX', click: () => sendToRenderer('file-export-latex') },
+            { label: 'Media Wiki', click: () => sendToRenderer('file-export-mediawiki') },
+            { label: 'reStructuredText', click: () => sendToRenderer('file-export-rst') },
+            { label: 'Textile', click: () => sendToRenderer('file-export-textile') },
+            { label: 'OPML', click: () => sendToRenderer('file-export-opml') },
+            { type: 'separator' },
+            { label: '使用上一次设置导出', accelerator: 'Ctrl+Shift+E', click: () => sendToRenderer('file-export-last') },
+            { label: '导出并覆盖上一次导出的文件', click: () => sendToRenderer('file-export-overwrite') },
+            { label: '导出设置...', click: () => sendToRenderer('file-export-settings') }
+          ]
+        },
+        { label: '打印...', accelerator: 'Alt+Shift+P', click: () => sendToRenderer('file-print') },
+        { type: 'separator' },
+        { label: '偏好设置...', accelerator: 'Ctrl+,', click: () => sendToRenderer('file-preferences') },
+        { type: 'separator' },
+        { label: '关闭', accelerator: 'Ctrl+W', click: () => sendToRenderer('file-close') }
       ]
     },
     {
