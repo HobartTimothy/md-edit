@@ -456,9 +456,7 @@ function createAppMenu() {
 }
 
 function sendToRenderer(channel, payload) {
-  if (mainWindow) {
-    mainWindow.webContents.send(channel, payload);
-  }
+  mainWindow?.webContents.send(channel, payload);
 }
 
 app.on('ready', createWindow);
@@ -474,5 +472,4 @@ app.on('activate', () => {
     createWindow();
   }
 });
-
 
