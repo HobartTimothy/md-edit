@@ -374,7 +374,10 @@ function createAppMenu() {
       label: '主题(T)',
       submenu: [
         { label: 'Github', type: 'radio', checked: true, click: () => sendToRenderer('theme-github') },
-        { label: 'Night', type: 'radio', click: () => sendToRenderer('theme-night') }
+        { label: 'Newsprint', type: 'radio', click: () => sendToRenderer('theme-newsprint') },
+        { label: 'Night', type: 'radio', click: () => sendToRenderer('theme-night') },
+        { label: 'Pixyll', type: 'radio', click: () => sendToRenderer('theme-pixyll') },
+        { label: 'Whitey', type: 'radio', click: () => sendToRenderer('theme-whitey') }
       ]
     },
     {

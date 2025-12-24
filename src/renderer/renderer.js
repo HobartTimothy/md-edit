@@ -87,6 +87,13 @@ function adjustHeadingLevel(delta) {
   renderMarkdown(editor.value);
 }
 
+function setTheme(theme) {
+  const themes = ['github-theme', 'newsprint-theme', 'night-theme', 'pixyll-theme', 'whitey-theme'];
+  themes.forEach((t) => document.body.classList.remove(t));
+  const cls = `${theme}-theme`;
+  document.body.classList.add(cls);
+}
+
 function handleMenuCommand(channel) {
   switch (channel) {
     case 'edit-copy-image':
@@ -341,12 +348,19 @@ function handleMenuCommand(channel) {
       insertTextAtCursor('[链接文本][ref]\n\n[ref]: https://example.com');
       break;
     case 'theme-github':
-      document.body.classList.remove('night-theme');
-      document.body.classList.add('github-theme');
+      setTheme('github');
+      break;
+    case 'theme-newsprint':
+      setTheme('newsprint');
       break;
     case 'theme-night':
-      document.body.classList.remove('github-theme');
-      document.body.classList.add('night-theme');
+      setTheme('night');
+      break;
+    case 'theme-pixyll':
+      setTheme('pixyll');
+      break;
+    case 'theme-whitey':
+      setTheme('whitey');
       break;
     case 'help-whats-new':
       alert('“最新内容”功能待实现。');
@@ -475,7 +489,10 @@ const channels = [
   'toggle-source-mode',
   'reset-zoom',
   'theme-github',
+  'theme-newsprint',
   'theme-night',
+  'theme-pixyll',
+  'theme-whitey',
   'help-whats-new',
   'help-quick-start',
   'help-markdown-ref',
