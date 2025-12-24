@@ -116,11 +116,36 @@ function createAppMenu() {
           accelerator: 'Ctrl+3',
           click: () => sendToRenderer('toggle-heading-3')
         },
+        {
+          label: '四级标题',
+          accelerator: 'Ctrl+4',
+          click: () => sendToRenderer('toggle-heading-4')
+        },
+        {
+          label: '五级标题',
+          accelerator: 'Ctrl+5',
+          click: () => sendToRenderer('toggle-heading-5')
+        },
+        {
+          label: '六级标题',
+          accelerator: 'Ctrl+6',
+          click: () => sendToRenderer('toggle-heading-6')
+        },
         { type: 'separator' },
         {
           label: '段落',
           accelerator: 'Ctrl+0',
           click: () => sendToRenderer('toggle-paragraph')
+        },
+        {
+          label: '提升标题级别',
+          accelerator: 'Ctrl+=',
+          click: () => sendToRenderer('heading-promote')
+        },
+        {
+          label: '降低标题级别',
+          accelerator: 'Ctrl+-',
+          click: () => sendToRenderer('heading-demote')
         },
         { type: 'separator' },
         {
@@ -137,6 +162,78 @@ function createAppMenu() {
           label: '任务列表',
           accelerator: 'Ctrl+Shift+X',
           click: () => sendToRenderer('toggle-task-list')
+        },
+        { type: 'separator' },
+        {
+          label: '表格',
+          click: () => sendToRenderer('paragraph-insert-table')
+        },
+        {
+          label: '公式块',
+          accelerator: 'Ctrl+Shift+M',
+          click: () => sendToRenderer('paragraph-math-block')
+        },
+        {
+          label: '代码块',
+          accelerator: 'Ctrl+Shift+K',
+          click: () => sendToRenderer('insert-code-block')
+        },
+        {
+          label: '代码工具',
+          submenu: [
+            { label: '运行代码（占位）', click: () => sendToRenderer('paragraph-code-tools-run') }
+          ]
+        },
+        { type: 'separator' },
+        {
+          label: '引用',
+          accelerator: 'Ctrl+Shift+Q',
+          click: () => sendToRenderer('paragraph-toggle-quote')
+        },
+        { type: 'separator' },
+        {
+          label: '任务状态',
+          submenu: [
+            { label: '切换完成状态', click: () => sendToRenderer('paragraph-task-toggle-state') }
+          ]
+        },
+        {
+          label: '列表缩进',
+          submenu: [
+            { label: '增加缩进', click: () => sendToRenderer('paragraph-list-indent') },
+            { label: '减少缩进', click: () => sendToRenderer('paragraph-list-outdent') }
+          ]
+        },
+        { type: 'separator' },
+        {
+          label: '在上方插入段落',
+          click: () => sendToRenderer('paragraph-insert-above')
+        },
+        {
+          label: '在下方插入段落',
+          click: () => sendToRenderer('paragraph-insert-below')
+        },
+        { type: 'separator' },
+        {
+          label: '链接引用',
+          click: () => sendToRenderer('paragraph-link-ref')
+        },
+        {
+          label: '脚注',
+          click: () => sendToRenderer('paragraph-footnote')
+        },
+        { type: 'separator' },
+        {
+          label: '水平分割线',
+          click: () => sendToRenderer('paragraph-hr')
+        },
+        {
+          label: '内容目录',
+          click: () => sendToRenderer('paragraph-toc')
+        },
+        {
+          label: 'YAML Front Matter',
+          click: () => sendToRenderer('paragraph-yaml-front-matter')
         }
       ]
     },
@@ -146,16 +243,45 @@ function createAppMenu() {
         { label: '加粗', accelerator: 'Ctrl+B', click: () => sendToRenderer('toggle-bold') },
         { label: '斜体', accelerator: 'Ctrl+I', click: () => sendToRenderer('toggle-italic') },
         { label: '下划线', accelerator: 'Ctrl+U', click: () => sendToRenderer('toggle-underline') },
-        { type: 'separator' },
         {
           label: '代码',
           accelerator: 'Ctrl+Shift+`',
           click: () => sendToRenderer('toggle-inline-code')
         },
         {
-          label: '代码块',
-          accelerator: 'Ctrl+Shift+K',
-          click: () => sendToRenderer('insert-code-block')
+          label: '删除线',
+          accelerator: 'Alt+Shift+5',
+          click: () => sendToRenderer('format-strike')
+        },
+        {
+          label: '注释',
+          click: () => sendToRenderer('format-comment')
+        },
+        { type: 'separator' },
+        {
+          label: '超链接',
+          accelerator: 'Ctrl+K',
+          click: () => sendToRenderer('format-link')
+        },
+        {
+          label: '链接操作',
+          submenu: [
+            { label: '编辑链接', click: () => sendToRenderer('format-link-edit') },
+            { label: '移除链接', click: () => sendToRenderer('format-link-remove') }
+          ]
+        },
+        {
+          label: '图像',
+          submenu: [
+            { label: '插入图片', click: () => sendToRenderer('format-image-insert') },
+            { label: '编辑图片', click: () => sendToRenderer('format-image-edit') }
+          ]
+        },
+        { type: 'separator' },
+        {
+          label: '清除样式',
+          accelerator: 'Ctrl+\\',
+          click: () => sendToRenderer('format-clear-style')
         }
       ]
     },

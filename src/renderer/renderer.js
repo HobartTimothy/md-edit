@@ -51,6 +51,42 @@ function toggleLinePrefix(prefix) {
   renderMarkdown(editor.value);
 }
 
+function getCurrentLineRange() {
+  const value = editor.value;
+  const pos = editor.selectionStart;
+  const lineStart = value.lastIndexOf('\n', pos - 1) + 1;
+  let lineEnd = value.indexOf('\n', pos);
+  if (lineEnd === -1) lineEnd = value.length;
+  return { lineStart, lineEnd };
+}
+
+function insertTextAtCursor(text) {
+  const start = editor.selectionStart;
+  const end = editor.selectionEnd;
+  const value = editor.value;
+  editor.value = value.slice(0, start) + text + value.slice(end);
+  const newPos = start + text.length;
+  editor.focus();
+  editor.selectionStart = editor.selectionEnd = newPos;
+  renderMarkdown(editor.value);
+}
+
+function adjustHeadingLevel(delta) {
+  const { lineStart, lineEnd } = getCurrentLineRange();
+  const value = editor.value;
+  const line = value.slice(lineStart, lineEnd);
+  const match = line.match(/^(#{1,6})\s+(.*)$/);
+  if (!match) return;
+  let level = match[1].length + delta;
+  if (level < 1) level = 1;
+  if (level > 6) level = 6;
+  const newLine = `${'#'.repeat(level)} ${match[2]}`;
+  editor.value = value.slice(0, lineStart) + newLine + value.slice(lineEnd);
+  editor.focus();
+  editor.selectionStart = editor.selectionEnd = lineStart + newLine.length;
+  renderMarkdown(editor.value);
+}
+
 function handleMenuCommand(channel) {
   switch (channel) {
     case 'edit-copy-image':
@@ -116,6 +152,50 @@ function handleMenuCommand(channel) {
     case 'edit-emoji':
       alert('“表情与符号”功能待实现。');
       break;
+    case 'toggle-underline':
+      surroundSelection('<u>', '</u>');
+      break;
+    case 'format-strike':
+      surroundSelection('~~', '~~');
+      break;
+    case 'format-comment':
+      surroundSelection('<!-- ', ' -->');
+      break;
+    case 'format-link': {
+      const url = window.prompt('输入链接地址：', 'https://');
+      if (!url) break;
+      const start = editor.selectionStart;
+      const end = editor.selectionEnd;
+      const value = editor.value;
+      const selected = value.slice(start, end) || '链接文本';
+      const md = `[${selected}](${url})`;
+      editor.value = value.slice(0, start) + md + value.slice(end);
+      editor.focus();
+      editor.selectionStart = start;
+      editor.selectionEnd = start + md.length;
+      renderMarkdown(editor.value);
+      break;
+    }
+    case 'format-link-edit':
+      alert('“编辑链接”功能待实现。');
+      break;
+    case 'format-link-remove':
+      alert('“移除链接”功能待实现。');
+      break;
+    case 'format-image-insert': {
+      const url = window.prompt('输入图片地址：', 'https://');
+      if (!url) break;
+      const alt = window.prompt('输入图片说明（可选）：', '');
+      const md = `![${alt || ''}](${url})`;
+      insertTextAtCursor(md);
+      break;
+    }
+    case 'format-image-edit':
+      alert('“编辑图片”功能待实现。');
+      break;
+    case 'format-clear-style':
+      alert('“清除样式”功能待实现。');
+      break;
     case 'toggle-bold':
       surroundSelection('**', '**');
       break;
@@ -127,6 +207,21 @@ function handleMenuCommand(channel) {
       break;
     case 'insert-code-block':
       surroundSelection('\n```language\n', '\n```\n');
+      break;
+    case 'toggle-heading-4':
+      toggleLinePrefix('#### ');
+      break;
+    case 'toggle-heading-5':
+      toggleLinePrefix('##### ');
+      break;
+    case 'toggle-heading-6':
+      toggleLinePrefix('###### ');
+      break;
+    case 'heading-promote':
+      adjustHeadingLevel(-1);
+      break;
+    case 'heading-demote':
+      adjustHeadingLevel(1);
       break;
     case 'toggle-heading-1':
       toggleLinePrefix('# ');
@@ -145,6 +240,68 @@ function handleMenuCommand(channel) {
       break;
     case 'toggle-task-list':
       toggleLinePrefix('- [ ] ');
+      break;
+    case 'paragraph-insert-table':
+      insertTextAtCursor('\n| 列1 | 列2 | 列3 |\n| --- | --- | --- |\n| 内容1 | 内容2 | 内容3 |\n');
+      break;
+    case 'paragraph-math-block':
+      surroundSelection('\n$$\n', '\n$$\n');
+      break;
+    case 'paragraph-toggle-quote':
+      toggleLinePrefix('> ');
+      break;
+    case 'paragraph-insert-above': {
+      const { lineStart } = getCurrentLineRange();
+      const value = editor.value;
+      editor.value = value.slice(0, lineStart) + '\n' + value.slice(lineStart);
+      editor.focus();
+      editor.selectionStart = editor.selectionEnd = lineStart;
+      renderMarkdown(editor.value);
+      break;
+    }
+    case 'paragraph-insert-below': {
+      const { lineEnd } = getCurrentLineRange();
+      const value = editor.value;
+      const insertPos = value.charAt(lineEnd) === '\n' ? lineEnd + 1 : lineEnd;
+      editor.value = value.slice(0, insertPos) + '\n' + value.slice(insertPos);
+      editor.focus();
+      editor.selectionStart = editor.selectionEnd = insertPos + 1;
+      renderMarkdown(editor.value);
+      break;
+    }
+    case 'paragraph-hr':
+      insertTextAtCursor('\n\n---\n\n');
+      break;
+    case 'paragraph-footnote':
+      insertTextAtCursor('[^1]');
+      break;
+    case 'paragraph-toc':
+      insertTextAtCursor('\n\n<!-- TOC -->\n\n');
+      break;
+    case 'paragraph-yaml-front-matter': {
+      const value = editor.value;
+      if (value.startsWith('---\n')) break;
+      const yaml = '---\n' + 'title: \n' + 'date: \n' + '---\n\n';
+      editor.value = yaml + value;
+      editor.focus();
+      editor.selectionStart = editor.selectionEnd = yaml.length;
+      renderMarkdown(editor.value);
+      break;
+    }
+    case 'paragraph-code-tools-run':
+      alert('“代码工具”功能待实现。');
+      break;
+    case 'paragraph-task-toggle-state':
+      alert('“任务状态”功能待实现。');
+      break;
+    case 'paragraph-list-indent':
+      alert('“列表增加缩进”功能待实现。');
+      break;
+    case 'paragraph-list-outdent':
+      alert('“列表减少缩进”功能待实现。');
+      break;
+    case 'paragraph-link-ref':
+      insertTextAtCursor('[链接文本][ref]\n\n[ref]: https://example.com');
       break;
     case 'theme-github':
       document.body.classList.remove('night-theme');
@@ -228,6 +385,34 @@ const channels = [
   'edit-find-next',
   'edit-replace',
   'edit-emoji',
+  'toggle-underline',
+  'format-strike',
+  'format-comment',
+  'format-link',
+  'format-link-edit',
+  'format-link-remove',
+  'format-image-insert',
+  'format-image-edit',
+  'format-clear-style',
+  'toggle-heading-4',
+  'toggle-heading-5',
+  'toggle-heading-6',
+  'heading-promote',
+  'heading-demote',
+  'paragraph-insert-table',
+  'paragraph-math-block',
+  'paragraph-toggle-quote',
+  'paragraph-insert-above',
+  'paragraph-insert-below',
+  'paragraph-hr',
+  'paragraph-footnote',
+  'paragraph-toc',
+  'paragraph-yaml-front-matter',
+  'paragraph-code-tools-run',
+  'paragraph-task-toggle-state',
+  'paragraph-list-indent',
+  'paragraph-list-outdent',
+  'paragraph-link-ref',
   'toggle-heading-1',
   'toggle-heading-2',
   'toggle-heading-3',
