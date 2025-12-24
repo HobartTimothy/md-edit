@@ -139,6 +139,12 @@ function createAppMenu() {
     {
       label: '帮助(H)',
       submenu: [
+        { label: '更新日志', click: () => sendToRenderer('help-changelog') },
+        { label: '隐私条款', click: () => sendToRenderer('help-privacy') },
+        { label: '官方网站', click: () => sendToRenderer('help-website') },
+        { label: '反馈', click: () => sendToRenderer('help-feedback') },
+        { type: 'separator' },
+        { label: '检查更新...', click: () => sendToRenderer('help-check-updates') },
         { label: '关于', click: () => sendToRenderer('help-about') }
       ]
     }
