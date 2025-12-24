@@ -1,0 +1,21 @@
+{
+  "name": "md-edit",
+  "version": "0.1.0",
+  "description": "Markdown 文本编辑器",
+  "main": "src/main/main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron .",
+    "build": "echo \"Add electron-builder or other packager later\""
+  },
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "37.3.1"
+  },
+  "dependencies": {
+    "marked": "^12.0.0"
+  }
+}
+
+

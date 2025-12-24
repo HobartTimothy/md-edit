@@ -1,0 +1,49 @@
+.app-root {
+  display: flex;
+  height: 100vh;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+.editor-pane,
+.preview-pane {
+  width: 50%;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+.editor-pane {
+  border-right: 1px solid #e0e0e0;
+}
+
+#editor {
+  width: 100%;
+  height: 100%;
+  padding: 16px;
+  border: none;
+  outline: none;
+  resize: none;
+  font-family: 'Consolas', 'Fira Code', monospace;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.preview-pane {
+  padding: 16px;
+  overflow: auto;
+}
+
+body.github-theme {
+  background-color: #ffffff;
+  color: #24292e;
+}
+
+body.night-theme {
+  background-color: #0d1117;
+  color: #c9d1d9;
+}
+
+body.night-theme .preview-pane {
+  background-color: #0d1117;
+}
+
+
