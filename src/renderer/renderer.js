@@ -196,6 +196,43 @@ function handleMenuCommand(channel) {
     case 'format-clear-style':
       alert('“清除样式”功能待实现。');
       break;
+    case 'toggle-source-mode':
+      alert('“源代码模式”功能待实现。');
+      break;
+    case 'view-toggle-sidebar':
+      alert('“显示 / 隐藏侧边栏”功能待实现。');
+      break;
+    case 'view-outline':
+      alert('“大纲”功能待实现。');
+      break;
+    case 'view-documents':
+      alert('“文档列表”功能待实现。');
+      break;
+    case 'view-file-tree':
+      alert('“文件树”功能待实现。');
+      break;
+    case 'view-pane':
+      alert('“窗格”功能待实现。');
+      break;
+    case 'view-focus-mode':
+      alert('“专注模式”功能待实现。');
+      break;
+    case 'view-typewriter-mode':
+      alert('“打字机模式”功能待实现。');
+      break;
+    case 'view-toggle-statusbar':
+      alert('“显示状态栏”功能待实现。');
+      break;
+    case 'view-word-count': {
+      const text = editor.value || '';
+      const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+      const chars = text.length;
+      alert(`字数：${words}\n字符数：${chars}`);
+      break;
+    }
+    case 'view-switch-window':
+      alert('“应用内窗口切换”功能待实现。');
+      break;
     case 'toggle-bold':
       surroundSelection('**', '**');
       break;
@@ -394,6 +431,16 @@ const channels = [
   'format-image-insert',
   'format-image-edit',
   'format-clear-style',
+  'view-toggle-sidebar',
+  'view-outline',
+  'view-documents',
+  'view-file-tree',
+  'view-pane',
+  'view-focus-mode',
+  'view-typewriter-mode',
+  'view-toggle-statusbar',
+  'view-word-count',
+  'view-switch-window',
   'toggle-heading-4',
   'toggle-heading-5',
   'toggle-heading-6',

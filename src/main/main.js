@@ -293,15 +293,81 @@ function createAppMenu() {
           accelerator: 'Ctrl+/',
           click: () => sendToRenderer('toggle-source-mode')
         },
-        {
-          label: '实标尺寸',
-          accelerator: 'Ctrl+Shift+9',
-          click: () => sendToRenderer('reset-zoom')
-        },
-        { role: 'togglefullscreen', label: '切换全屏' },
         { type: 'separator' },
+        {
+          label: '显示 / 隐藏侧边栏',
+          accelerator: 'Ctrl+Shift+L',
+          click: () => sendToRenderer('view-toggle-sidebar')
+        },
+        {
+          label: '大纲',
+          accelerator: 'Ctrl+Shift+1',
+          click: () => sendToRenderer('view-outline')
+        },
+        {
+          label: '文档列表',
+          accelerator: 'Ctrl+Shift+2',
+          click: () => sendToRenderer('view-documents')
+        },
+        {
+          label: '文件树',
+          accelerator: 'Ctrl+Shift+3',
+          click: () => sendToRenderer('view-file-tree')
+        },
+        {
+          label: '窗格',
+          accelerator: 'Ctrl+Shift+F',
+          click: () => sendToRenderer('view-pane')
+        },
+        { type: 'separator' },
+        {
+          label: '专注模式',
+          accelerator: 'F8',
+          click: () => sendToRenderer('view-focus-mode')
+        },
+        {
+          label: '打字机模式',
+          accelerator: 'F9',
+          click: () => sendToRenderer('view-typewriter-mode')
+        },
+        { type: 'separator' },
+        {
+          label: '显示状态栏',
+          type: 'checkbox',
+          checked: true,
+          click: () => sendToRenderer('view-toggle-statusbar')
+        },
+        {
+          label: '字数统计窗口',
+          click: () => sendToRenderer('view-word-count')
+        },
+        { type: 'separator' },
+        {
+          label: '切换全屏',
+          role: 'togglefullscreen',
+          accelerator: 'F11'
+        },
+        {
+          label: '保持窗口在最前端',
+          type: 'checkbox',
+          click: (menuItem) => {
+            if (mainWindow) {
+              mainWindow.setAlwaysOnTop(menuItem.checked);
+            }
+          }
+        },
+        { type: 'separator' },
+        { role: 'resetZoom', label: '实际大小', accelerator: 'Ctrl+Shift+9' },
+        { role: 'zoomIn', label: '放大', accelerator: 'Ctrl+Shift+=' },
+        { role: 'zoomOut', label: '缩小', accelerator: 'Ctrl+Shift+-' },
+        { type: 'separator' },
+        {
+          label: '应用内窗口切换',
+          accelerator: 'Ctrl+Tab',
+          click: () => sendToRenderer('view-switch-window')
+        },
         { role: 'reload', label: '重新加载' },
-        { role: 'toggleDevTools', label: '开发者工具' }
+        { role: 'toggleDevTools', label: '开发者工具', accelerator: 'Shift+F12' }
       ]
     },
     {
