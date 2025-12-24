@@ -53,6 +53,69 @@ function toggleLinePrefix(prefix) {
 
 function handleMenuCommand(channel) {
   switch (channel) {
+    case 'edit-copy-image':
+      alert('“拷贝图片”功能待实现。');
+      break;
+    case 'edit-copy-plain':
+      alert('“复制为纯文本”功能待实现。');
+      break;
+    case 'edit-copy-md':
+      alert('“复制为 Markdown”功能待实现。');
+      break;
+    case 'edit-copy-html':
+      alert('“复制为 HTML 代码”功能待实现。');
+      break;
+    case 'edit-copy-rich':
+      alert('“复制内容并保留格式”功能待实现。');
+      break;
+    case 'edit-paste-plain':
+      alert('“粘贴为纯文本”功能待实现。');
+      break;
+    case 'edit-move-row-up':
+      alert('“上移表行”功能待实现。');
+      break;
+    case 'edit-move-row-down':
+      alert('“下移表行”功能待实现。');
+      break;
+    case 'edit-delete':
+      alert('“删除”功能待实现。');
+      break;
+    case 'edit-delete-range-paragraph':
+      alert('“删除本段”功能待实现。');
+      break;
+    case 'edit-delete-range-line':
+      alert('“删除本行”功能待实现。');
+      break;
+    case 'edit-math-block':
+      alert('“数学工具/公式块”功能待实现。');
+      break;
+    case 'edit-smart-punctuation':
+      alert('“智能标点”功能待实现。');
+      break;
+    case 'edit-newline-n':
+      alert('“换行符转换为 \\n”功能待实现。');
+      break;
+    case 'edit-newline-rn':
+      alert('“换行符转换为 \\r\\n”功能待实现。');
+      break;
+    case 'edit-spaces-newlines':
+      alert('“空格与换行”功能待实现。');
+      break;
+    case 'edit-spellcheck':
+      alert('“拼写检查”功能待实现。');
+      break;
+    case 'edit-find':
+      alert('“查找”功能待实现。');
+      break;
+    case 'edit-find-next':
+      alert('“查找下一个”功能待实现。');
+      break;
+    case 'edit-replace':
+      alert('“替换”功能待实现。');
+      break;
+    case 'edit-emoji':
+      alert('“表情与符号”功能待实现。');
+      break;
     case 'toggle-bold':
       surroundSelection('**', '**');
       break;
@@ -127,9 +190,6 @@ function handleMenuCommand(channel) {
     case 'help-website':
       alert('“官方网站”功能待实现。');
       break;
-    case 'help-feedback':
-      alert('“反馈”功能待实现。');
-      break;
     case 'help-check-updates':
       alert('“检查更新”功能待实现。');
       break;
@@ -147,6 +207,27 @@ const channels = [
   'file-open',
   'file-save',
   'file-save-as',
+  'edit-copy-image',
+  'edit-copy-plain',
+  'edit-copy-md',
+  'edit-copy-html',
+  'edit-copy-rich',
+  'edit-paste-plain',
+  'edit-move-row-up',
+  'edit-move-row-down',
+  'edit-delete',
+  'edit-delete-range-paragraph',
+  'edit-delete-range-line',
+  'edit-math-block',
+  'edit-smart-punctuation',
+  'edit-newline-n',
+  'edit-newline-rn',
+  'edit-spaces-newlines',
+  'edit-spellcheck',
+  'edit-find',
+  'edit-find-next',
+  'edit-replace',
+  'edit-emoji',
   'toggle-heading-1',
   'toggle-heading-2',
   'toggle-heading-3',
@@ -175,7 +256,6 @@ const channels = [
   'help-changelog',
   'help-privacy',
   'help-website',
-  'help-feedback',
   'help-check-updates',
   'help-about'
 ];

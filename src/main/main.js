@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Menu } = require('electron');
+const { app, BrowserWindow, Menu, shell } = require('electron');
 const path = require('path');
 
 let mainWindow;
@@ -40,13 +40,62 @@ function createAppMenu() {
     {
       label: '编辑(E)',
       submenu: [
-        { role: 'undo', label: '撤销' },
-        { role: 'redo', label: '重做' },
-        { type: 'separator' },
-        { role: 'cut', label: '剪切' },
-        { role: 'copy', label: '复制' },
-        { role: 'paste', label: '粘贴' },
-        { role: 'selectAll', label: '全选' }
+      { role: 'undo', label: '撤销', accelerator: 'Ctrl+Z' },
+      { role: 'redo', label: '重做', accelerator: 'Ctrl+Y' },
+      { type: 'separator' },
+      { role: 'cut', label: '剪切', accelerator: 'Ctrl+X' },
+      { role: 'copy', label: '复制', accelerator: 'Ctrl+C' },
+      { label: '拷贝图片', click: () => sendToRenderer('edit-copy-image') },
+      { role: 'paste', label: '粘贴', accelerator: 'Ctrl+V' },
+      { type: 'separator' },
+      { label: '复制为纯文本', click: () => sendToRenderer('edit-copy-plain') },
+      { label: '复制为 Markdown', accelerator: 'Ctrl+Shift+C', click: () => sendToRenderer('edit-copy-md') },
+      { label: '复制为 HTML 代码', click: () => sendToRenderer('edit-copy-html') },
+      { label: '复制内容并保留格式', click: () => sendToRenderer('edit-copy-rich') },
+      { type: 'separator' },
+      { label: '粘贴为纯文本', accelerator: 'Ctrl+Shift+V', click: () => sendToRenderer('edit-paste-plain') },
+      { type: 'separator' },
+      {
+        label: '选择',
+        submenu: [{ role: 'selectAll', label: '全选' }]
+      },
+      { label: '上移表行', accelerator: 'Alt+Up', click: () => sendToRenderer('edit-move-row-up') },
+      { label: '下移表行', accelerator: 'Alt+Down', click: () => sendToRenderer('edit-move-row-down') },
+      { type: 'separator' },
+      { label: '删除', click: () => sendToRenderer('edit-delete') },
+      {
+        label: '删除范围',
+        submenu: [
+          { label: '删除本段', click: () => sendToRenderer('edit-delete-range-paragraph') },
+          { label: '删除本行', click: () => sendToRenderer('edit-delete-range-line') }
+        ]
+      },
+      { type: 'separator' },
+      {
+        label: '数学工具',
+        submenu: [{ label: '公式块', click: () => sendToRenderer('edit-math-block') }]
+      },
+      { type: 'separator' },
+      { label: '智能标点', type: 'checkbox', checked: false, click: () => sendToRenderer('edit-smart-punctuation') },
+      {
+        label: '换行符',
+        submenu: [
+          { label: '转换为 \\n', click: () => sendToRenderer('edit-newline-n') },
+          { label: '转换为 \\r\\n', click: () => sendToRenderer('edit-newline-rn') }
+        ]
+      },
+      { label: '空格与换行', click: () => sendToRenderer('edit-spaces-newlines') },
+      { label: '拼写检查...', click: () => sendToRenderer('edit-spellcheck') },
+      { type: 'separator' },
+      {
+        label: '查找和替换',
+        submenu: [
+          { label: '查找', accelerator: 'Ctrl+F', click: () => sendToRenderer('edit-find') },
+          { label: '查找下一个', accelerator: 'F3', click: () => sendToRenderer('edit-find-next') },
+          { label: '替换', accelerator: 'Ctrl+H', click: () => sendToRenderer('edit-replace') }
+        ]
+      },
+      { label: '表情与符号', accelerator: 'Super+.', click: () => sendToRenderer('edit-emoji') }
       ]
     },
     {
@@ -142,7 +191,12 @@ function createAppMenu() {
         { label: '更新日志', click: () => sendToRenderer('help-changelog') },
         { label: '隐私条款', click: () => sendToRenderer('help-privacy') },
         { label: '官方网站', click: () => sendToRenderer('help-website') },
-        { label: '反馈', click: () => sendToRenderer('help-feedback') },
+      {
+        label: '反馈',
+        click: () => {
+          shell.openExternal('https://github.com/HobartTimothy/md-edit/issues');
+        }
+      },
         { type: 'separator' },
         { label: '检查更新...', click: () => sendToRenderer('help-check-updates') },
         { label: '关于', click: () => sendToRenderer('help-about') }
