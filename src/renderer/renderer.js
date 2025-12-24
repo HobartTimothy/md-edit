@@ -516,4 +516,115 @@ channels.forEach((ch) => {
 // Initial render
 renderMarkdown('');
 
+// ---------- 右键上下文菜单 ----------
 
+function buildContextMenu() {
+  const menu = document.createElement('div');
+  menu.id = 'md-context-menu';
+  menu.className = 'context-menu';
+  menu.innerHTML = [
+    '<div class="context-menu-row">',
+    '  <div class="context-menu-btn" data-command="edit-cut">✂</div>',
+    '  <div class="context-menu-btn" data-command="edit-copy">📄</div>',
+    '  <div class="context-menu-btn" data-command="edit-paste">📋</div>',
+    '  <div class="context-menu-btn" data-command="edit-delete">🗑</div>',
+    '</div>',
+    '<div class="context-menu-row">',
+    '  <div class="context-menu-btn" data-command="toggle-bold">B</div>',
+    '  <div class="context-menu-btn" data-command="toggle-italic"><i>I</i></div>',
+    '  <div class="context-menu-btn" data-command="toggle-inline-code">&lt;/&gt;</div>',
+    '  <div class="context-menu-btn" data-command="format-link">🔗</div>',
+    '</div>',
+    '<div class="context-menu-row">',
+    '  <div class="context-menu-btn" data-command="paragraph-toggle-quote">“”</div>',
+    '  <div class="context-menu-btn" data-command="toggle-ol">1.</div>',
+    '  <div class="context-menu-btn" data-command="toggle-ul">•</div>',
+    '  <div class="context-menu-btn" data-command="toggle-task-list">☑</div>',
+    '</div>',
+    '<div class="context-menu-row">',
+    '  <div class="context-menu-item has-submenu">',
+    '    <span class="context-menu-item-label">段落</span>',
+    '    <div class="context-submenu">',
+    '      <div class="context-menu-item" data-command="toggle-heading-1"><span class="context-menu-item-label">一级标题</span><span class="context-menu-item-shortcut">Ctrl+1</span></div>',
+    '      <div class="context-menu-item" data-command="toggle-heading-2"><span class="context-menu-item-label">二级标题</span><span class="context-menu-item-shortcut">Ctrl+2</span></div>',
+    '      <div class="context-menu-item" data-command="toggle-heading-3"><span class="context-menu-item-label">三级标题</span><span class="context-menu-item-shortcut">Ctrl+3</span></div>',
+    '      <div class="context-menu-item" data-command="toggle-heading-4"><span class="context-menu-item-label">四级标题</span><span class="context-menu-item-shortcut">Ctrl+4</span></div>',
+    '      <div class="context-menu-item" data-command="toggle-heading-5"><span class="context-menu-item-label">五级标题</span><span class="context-menu-item-shortcut">Ctrl+5</span></div>',
+    '      <div class="context-menu-item" data-command="toggle-heading-6"><span class="context-menu-item-label">六级标题</span><span class="context-menu-item-shortcut">Ctrl+6</span></div>',
+    '      <div class="context-menu-item" data-command="toggle-paragraph"><span class="context-menu-item-label">段落</span><span class="context-menu-item-shortcut">Ctrl+0</span></div>',
+    '    </div>',
+    '  </div>',
+    '</div>',
+    '<div class="context-menu-row">',
+    '  <div class="context-menu-item has-submenu">',
+    '    <span class="context-menu-item-label">插入</span>',
+    '    <div class="context-submenu">',
+    '      <div class="context-menu-item" data-command="format-image-insert"><span class="context-menu-item-label">图像</span></div>',
+    '      <div class="context-menu-item" data-command="paragraph-footnote"><span class="context-menu-item-label">脚注</span></div>',
+    '      <div class="context-menu-item" data-command="paragraph-link-ref"><span class="context-menu-item-label">链接引用</span></div>',
+    '      <div class="context-menu-item" data-command="paragraph-hr"><span class="context-menu-item-label">水平分割线</span></div>',
+    '      <div class="context-menu-item" data-command="paragraph-insert-table"><span class="context-menu-item-label">表格</span></div>',
+    '      <div class="context-menu-item" data-command="insert-code-block"><span class="context-menu-item-label">代码块</span></div>',
+    '      <div class="context-menu-item" data-command="paragraph-math-block"><span class="context-menu-item-label">公式块</span></div>',
+    '      <div class="context-menu-item" data-command="paragraph-toc"><span class="context-menu-item-label">内容目录</span></div>',
+    '      <div class="context-menu-item" data-command="paragraph-yaml-front-matter"><span class="context-menu-item-label">YAML Front Matter</span></div>',
+    '      <div class="context-menu-item" data-command="paragraph-insert-above"><span class="context-menu-item-label">段落（上方）</span></div>',
+    '      <div class="context-menu-item" data-command="paragraph-insert-below"><span class="context-menu-item-label">段落（下方）</span></div>',
+    '    </div>',
+    '  </div>',
+    '</div>'
+  ].join('');
+
+  document.body.appendChild(menu);
+
+  menu.addEventListener('click', (e) => {
+    const target = e.target.closest('[data-command]');
+    if (!target) return;
+    const cmd = target.getAttribute('data-command');
+    if (cmd === 'edit-cut') {
+      document.execCommand('cut');
+    } else if (cmd === 'edit-copy') {
+      document.execCommand('copy');
+    } else if (cmd === 'edit-paste') {
+      document.execCommand('paste');
+    } else {
+      handleMenuCommand(cmd);
+    }
+    hideContextMenu();
+  });
+
+  return menu;
+}
+
+function showContextMenu(x, y) {
+  const menu = document.getElementById('md-context-menu') || buildContextMenu();
+  menu.style.left = `${x}px`;
+  menu.style.top = `${y}px`;
+  menu.classList.add('visible');
+}
+
+function hideContextMenu() {
+  const menu = document.getElementById('md-context-menu');
+  if (menu) {
+    menu.classList.remove('visible');
+  }
+}
+
+editor.addEventListener('contextmenu', (e) => {
+  e.preventDefault();
+  showContextMenu(e.clientX, e.clientY);
+});
+
+document.addEventListener('click', (e) => {
+  const menu = document.getElementById('md-context-menu');
+  if (!menu) return;
+  if (!menu.contains(e.target)) {
+    hideContextMenu();
+  }
+});
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    hideContextMenu();
+  }
+});
