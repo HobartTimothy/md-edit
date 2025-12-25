@@ -1,10 +1,13 @@
-const { app, BrowserWindow, Menu, shell } = require('electron');
+const { app, BrowserWindow, Menu, shell, dialog } = require('electron');
 
 const path = require('path');
+const fs = require('fs');
 
 let mainWindow;
+let fileToOpen = null;
+let newMdPath = null;
 
-function createWindow() {
+function createWindow(filePath = null) {
   mainWindow = new BrowserWindow({
     width: 1280,
     height: 800,
@@ -21,7 +24,64 @@ function createWindow() {
     mainWindow = null;
   });
 
+  // 等待窗口加载完成后打开文件
+  mainWindow.webContents.once('did-finish-load', () => {
+    if (filePath) {
+      openFile(filePath);
+    }
+  });
+
   createAppMenu();
+}
+
+function openFile(filePath) {
+  if (!mainWindow) return;
+  
+  try {
+    if (fs.existsSync(filePath)) {
+      const content = fs.readFileSync(filePath, 'utf-8');
+      mainWindow.webContents.send('file-opened', {
+        path: filePath,
+        content: content
+      });
+    }
+  } catch (error) {
+    console.error('打开文件失败:', error);
+    dialog.showErrorBox('错误', `无法打开文件: ${error.message}`);
+  }
+}
+
+function createNewMdFile(targetDir) {
+  if (!mainWindow) return;
+  
+  try {
+    // 生成新文件名
+    let fileName = '新建 Markdown 文件.md';
+    let filePath = path.join(targetDir, fileName);
+    let counter = 1;
+    
+    // 如果文件已存在，添加数字后缀
+    while (fs.existsSync(filePath)) {
+      fileName = `新建 Markdown 文件 (${counter}).md`;
+      filePath = path.join(targetDir, fileName);
+      counter++;
+    }
+    
+    // 创建新文件
+    fs.writeFileSync(filePath, '', 'utf-8');
+    
+    // 打开新文件
+    if (mainWindow) {
+      mainWindow.webContents.send('file-opened', {
+        path: filePath,
+        content: ''
+      });
+      mainWindow.focus();
+    }
+  } catch (error) {
+    console.error('创建文件失败:', error);
+    dialog.showErrorBox('错误', `无法创建文件: ${error.message}`);
+  }
 }
 
 function createAppMenu() {
@@ -477,7 +537,48 @@ function sendToRenderer(channel, payload) {
   mainWindow?.webContents.send(channel, payload);
 }
 
-app.on('ready', createWindow);
+// 处理命令行参数
+function handleCommandLineArgs() {
+  const args = process.argv.slice(1);
+  
+  for (let i = 0; i < args.length; i++) {
+    if (args[i] === '--new-md' && i + 1 < args.length) {
+      newMdPath = args[i + 1];
+      break;
+    } else if (args[i] && !args[i].startsWith('--') && !args[i].includes('electron')) {
+      // 检查是否是文件路径
+      const potentialPath = path.resolve(args[i]);
+      if (fs.existsSync(potentialPath) && path.extname(potentialPath).toLowerCase() === '.md') {
+        fileToOpen = potentialPath;
+        break;
+      }
+    }
+  }
+}
+
+// 处理 Windows 文件关联（当用户双击 .md 文件时）
+app.on('open-file', (event, filePath) => {
+  event.preventDefault();
+  fileToOpen = filePath;
+  
+  if (mainWindow) {
+    openFile(filePath);
+  } else {
+    createWindow(filePath);
+  }
+});
+
+app.on('ready', () => {
+  handleCommandLineArgs();
+  createWindow(fileToOpen);
+  
+  // 如果需要在指定目录创建新文件，在窗口加载完成后执行
+  if (newMdPath && mainWindow) {
+    mainWindow.webContents.once('did-finish-load', () => {
+      createNewMdFile(newMdPath);
+    });
+  }
+});
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
@@ -490,3 +591,30 @@ app.on('activate', () => {
     createWindow();
   }
 });
+
+// 处理第二个实例启动（Windows 文件关联）
+const gotTheLock = app.requestSingleInstanceLock();
+
+if (!gotTheLock) {
+  app.quit();
+} else {
+  app.on('second-instance', (event, commandLine, workingDirectory) => {
+    // 处理第二个实例的命令行参数
+    if (mainWindow) {
+      if (mainWindow.isMinimized()) mainWindow.restore();
+      mainWindow.focus();
+      
+      // 检查是否有文件路径参数
+      const filePath = commandLine.find(arg => 
+        !arg.startsWith('--') && 
+        !arg.includes('electron') && 
+        path.extname(arg).toLowerCase() === '.md' &&
+        fs.existsSync(arg)
+      );
+      
+      if (filePath) {
+        openFile(filePath);
+      }
+    }
+  });
+}

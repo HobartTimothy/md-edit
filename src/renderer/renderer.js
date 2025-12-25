@@ -494,6 +494,17 @@ channels.forEach((ch) => {
   ipcRenderer.on(ch, () => handleMenuCommand(ch));
 });
 
+// 处理文件打开事件
+ipcRenderer.on('file-opened', (event, data) => {
+  if (data && data.path) {
+    editor.value = data.content || '';
+    renderMarkdown(editor.value);
+    editor.focus();
+    // 可以在这里保存当前文件路径，用于后续保存
+    editor.dataset.currentPath = data.path;
+  }
+});
+
 // Initial render
 renderMarkdown('');
 

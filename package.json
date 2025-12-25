@@ -6,16 +6,51 @@
   "scripts": {
     "start": "electron .",
     "dev": "electron .",
-    "build": "echo \"Add electron-builder or other packager later\""
+    "build": "electron-builder --win",
+    "build:dir": "electron-builder --win --dir",
+    "dist": "electron-builder --win --publish never"
   },
   "author": "",
   "license": "MIT",
+  "build": {
+    "appId": "com.md-edit.app",
+    "productName": "md-edit",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "src/**/*",
+      "node_modules/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "md-edit",
+      "include": "build/installer.nsh",
+      "installerIcon": "build/icon.ico",
+      "uninstallerIcon": "build/icon.ico",
+      "installerHeaderIcon": "build/icon.ico"
+    }
+  },
   "devDependencies": {
-    "electron": "37.3.1"
+    "electron": "37.3.1",
+    "electron-builder": "^26.0.12"
   },
   "dependencies": {
     "marked": "^12.0.0"
   }
 }
-
-
