@@ -1,4 +1,5 @@
 const { app, BrowserWindow, Menu, shell } = require('electron');
+
 const path = require('path');
 
 let mainWindow;
@@ -341,9 +342,26 @@ function createAppMenu() {
       label: '视图(V)',
       submenu: [
         {
-          label: '源代码模式',
-          accelerator: 'Ctrl+/',
-          click: () => sendToRenderer('toggle-source-mode')
+          label: '编辑模式',
+          submenu: [
+            {
+              label: '对比模式',
+              type: 'radio',
+              checked: true,
+              click: () => sendToRenderer('view-mode-split')
+            },
+            {
+              label: '源代码模式',
+              type: 'radio',
+              accelerator: 'Ctrl+/',
+              click: () => sendToRenderer('toggle-source-mode')
+            },
+            {
+              label: '结果模式',
+              type: 'radio',
+              click: () => sendToRenderer('toggle-result-mode')
+            }
+          ]
         },
         { type: 'separator' },
         {
@@ -472,4 +490,3 @@ app.on('activate', () => {
     createWindow();
   }
 });
-

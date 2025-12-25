@@ -3,15 +3,191 @@ const { ipcRenderer } = require('electron');
 
 const editor = document.getElementById('editor');
 const preview = document.getElementById('preview');
+const resultPane = document.getElementById('result-pane');
+const appRoot = document.getElementById('app-root');
+
+// 当前模式：'split'（对比模式）、'source'（源代码模式）、'result'（结果模式）
+let currentMode = 'split';
 
 function renderMarkdown(text) {
   const rawHtml = marked.parse(text || '');
   // For桌面本地应用，简单场景下可以直接使用 marked 的输出
   preview.innerHTML = rawHtml;
+  if (currentMode === 'result') {
+    resultPane.innerHTML = rawHtml;
+  }
 }
 
+// 设置模式
+function setMode(mode) {
+  currentMode = mode;
+  appRoot.className = `app-root mode-${mode}`;
+  
+  if (mode === 'result') {
+    // 切换到结果模式时，将当前markdown渲染到结果面板
+    isUpdatingResultPane = true;
+    const markdown = editor.value || '';
+    resultPane.innerHTML = marked.parse(markdown);
+    
+    // 确保result-pane可以编辑
+    resultPane.contentEditable = 'true';
+    
+    // 延迟聚焦，确保DOM已更新
+    setTimeout(() => {
+      resultPane.focus();
+      // 将光标移动到末尾
+      const range = document.createRange();
+      range.selectNodeContents(resultPane);
+      range.collapse(false);
+      const selection = window.getSelection();
+      selection.removeAllRanges();
+      selection.addRange(range);
+      isUpdatingResultPane = false;
+    }, 50);
+  } else if (mode === 'source') {
+    // 切换到源代码模式时，聚焦编辑器
+    editor.focus();
+  } else {
+    // 对比模式
+    renderMarkdown(editor.value);
+  }
+}
+
+// 初始化默认模式
+setMode('split');
+
 editor.addEventListener('input', () => {
-  renderMarkdown(editor.value);
+  if (currentMode !== 'result') {
+    renderMarkdown(editor.value);
+  }
+});
+
+// 简单的HTML到Markdown转换函数
+function htmlToMarkdown(html) {
+  if (!html) return '';
+  
+  // 创建一个临时div来解析HTML
+  const tempDiv = document.createElement('div');
+  tempDiv.innerHTML = html;
+  
+  // 递归转换节点
+  function convertNode(node) {
+    if (node.nodeType === Node.TEXT_NODE) {
+      return node.textContent;
+    }
+    
+    if (node.nodeType !== Node.ELEMENT_NODE) {
+      return '';
+    }
+    
+    const tagName = node.tagName.toLowerCase();
+    const children = Array.from(node.childNodes).map(convertNode).join('');
+    
+    switch (tagName) {
+      case 'h1': return `# ${children}\n\n`;
+      case 'h2': return `## ${children}\n\n`;
+      case 'h3': return `### ${children}\n\n`;
+      case 'h4': return `#### ${children}\n\n`;
+      case 'h5': return `##### ${children}\n\n`;
+      case 'h6': return `###### ${children}\n\n`;
+      case 'p': return `${children}\n\n`;
+      case 'strong':
+      case 'b': return `**${children}**`;
+      case 'em':
+      case 'i': return `*${children}*`;
+      case 'u': return `<u>${children}</u>`;
+      case 'code': return node.parentNode.tagName === 'PRE' ? children : `\`${children}\``;
+      case 'pre': return `\`\`\`\n${children}\n\`\`\`\n\n`;
+      case 'blockquote': return `> ${children.split('\n').join('\n> ')}\n\n`;
+      case 'ul': return `${children}\n`;
+      case 'ol': return `${children}\n`;
+      case 'li': {
+        const parent = node.parentNode;
+        const isOrdered = parent.tagName === 'OL';
+        const index = Array.from(parent.children).indexOf(node);
+        const prefix = isOrdered ? `${index + 1}. ` : '- ';
+        return `${prefix}${children}\n`;
+      }
+      case 'a': {
+        const href = node.getAttribute('href') || '';
+        return `[${children}](${href})`;
+      }
+      case 'img': {
+        const src = node.getAttribute('src') || '';
+        const alt = node.getAttribute('alt') || '';
+        return `![${alt}](${src})`;
+      }
+      case 'hr': return '---\n\n';
+      case 'br': return '\n';
+      default: return children;
+    }
+  }
+  
+  return Array.from(tempDiv.childNodes).map(convertNode).join('').trim();
+}
+
+// 结果模式编辑事件处理
+let resultEditTimeout = null;
+let isUpdatingResultPane = false;
+
+resultPane.addEventListener('input', () => {
+  if (currentMode !== 'result' || isUpdatingResultPane) return;
+  
+  // 防抖处理
+  if (resultEditTimeout) {
+    clearTimeout(resultEditTimeout);
+  }
+  
+  resultEditTimeout = setTimeout(() => {
+    try {
+      // 保存当前光标位置
+      const selection = window.getSelection();
+      const range = selection.rangeCount > 0 ? selection.getRangeAt(0).cloneRange() : null;
+      
+      const html = resultPane.innerHTML;
+      const markdown = htmlToMarkdown(html);
+      editor.value = markdown;
+      
+      // 重新渲染
+      isUpdatingResultPane = true;
+      resultPane.innerHTML = marked.parse(markdown);
+      
+      // 尝试恢复光标位置（简化处理）
+      if (resultPane.firstChild) {
+        const newRange = document.createRange();
+        newRange.selectNodeContents(resultPane);
+        newRange.collapse(false); // 移动到末尾
+        selection.removeAllRanges();
+        selection.addRange(newRange);
+      }
+      
+      isUpdatingResultPane = false;
+    } catch (error) {
+      console.error('结果模式编辑错误:', error);
+      isUpdatingResultPane = false;
+    }
+  }, 500);
+});
+
+// 结果模式粘贴事件处理（转换为纯文本）
+resultPane.addEventListener('paste', (e) => {
+  if (currentMode !== 'result') return;
+  
+  e.preventDefault();
+  const text = e.clipboardData.getData('text/plain');
+  
+  // 插入纯文本
+  const selection = window.getSelection();
+  if (selection.rangeCount > 0) {
+    const range = selection.getRangeAt(0);
+    range.deleteContents();
+    const textNode = document.createTextNode(text);
+    range.insertNode(textNode);
+    range.setStartAfter(textNode);
+    range.collapse(true);
+    selection.removeAllRanges();
+    selection.addRange(range);
+  }
 });
 
 // Basic formatting helpers
@@ -205,8 +381,10 @@ const commandHandlers = {
   'format-image-edit': () => notImplemented('编辑图片'),
   'format-clear-style': () => notImplemented('清除样式'),
   
-  // 视图菜单
-  'toggle-source-mode': () => notImplemented('源代码模式'),
+  // 视图菜单 - 模式切换
+  'view-mode-split': () => setMode('split'),
+  'toggle-source-mode': () => setMode('source'),
+  'toggle-result-mode': () => setMode('result'),
   'view-toggle-sidebar': () => notImplemented('显示 / 隐藏侧边栏'),
   'view-outline': () => notImplemented('大纲'),
   'view-documents': () => notImplemented('文档列表'),
