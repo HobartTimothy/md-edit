@@ -125,6 +125,8 @@
 
 .editor-pane {
   border-right: 1px solid #e0e0e0;
+  position: relative;
+  overflow: hidden;
 }
 
 #editor {
@@ -137,11 +139,16 @@
   font-family: 'Consolas', 'Fira Code', monospace;
   font-size: 14px;
   line-height: 1.6;
+  overflow-y: auto;
+  overflow-x: auto;
+  box-sizing: border-box;
 }
 
 .preview-pane {
   padding: 16px;
   overflow: auto;
+  box-sizing: border-box;
+  position: relative;
 }
 
 .context-menu {
@@ -290,5 +297,138 @@ body.whitey-theme {
 
 body.night-theme .preview-pane {
   background-color: #0d1117;
+}
+
+/* ========== 滚动栏样式 ========== */
+
+/* 默认滚动栏样式（浅色主题） */
+#editor::-webkit-scrollbar,
+.preview-pane::-webkit-scrollbar,
+.result-pane::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+#editor::-webkit-scrollbar-track,
+.preview-pane::-webkit-scrollbar-track,
+.result-pane::-webkit-scrollbar-track {
+  background: transparent;
+  border-left: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+#editor::-webkit-scrollbar-thumb,
+.preview-pane::-webkit-scrollbar-thumb,
+.result-pane::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 6px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+#editor::-webkit-scrollbar-thumb:hover,
+.preview-pane::-webkit-scrollbar-thumb:hover,
+.result-pane::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.3);
+  background-clip: padding-box;
+}
+
+/* GitHub 主题滚动栏 */
+body.github-theme #editor::-webkit-scrollbar-thumb,
+body.github-theme .preview-pane::-webkit-scrollbar-thumb,
+body.github-theme .result-pane::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+body.github-theme #editor::-webkit-scrollbar-thumb:hover,
+body.github-theme .preview-pane::-webkit-scrollbar-thumb:hover,
+body.github-theme .result-pane::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.35);
+}
+
+body.github-theme #editor::-webkit-scrollbar-track,
+body.github-theme .preview-pane::-webkit-scrollbar-track,
+body.github-theme .result-pane::-webkit-scrollbar-track {
+  background: transparent;
+  border-left: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+/* Newsprint 主题滚动栏 */
+body.newsprint-theme #editor::-webkit-scrollbar-thumb,
+body.newsprint-theme .preview-pane::-webkit-scrollbar-thumb,
+body.newsprint-theme .result-pane::-webkit-scrollbar-thumb {
+  background: rgba(51, 51, 51, 0.25);
+}
+
+body.newsprint-theme #editor::-webkit-scrollbar-thumb:hover,
+body.newsprint-theme .preview-pane::-webkit-scrollbar-thumb:hover,
+body.newsprint-theme .result-pane::-webkit-scrollbar-thumb:hover {
+  background: rgba(51, 51, 51, 0.4);
+}
+
+body.newsprint-theme #editor::-webkit-scrollbar-track,
+body.newsprint-theme .preview-pane::-webkit-scrollbar-track,
+body.newsprint-theme .result-pane::-webkit-scrollbar-track {
+  background: transparent;
+  border-left: 1px solid rgba(51, 51, 51, 0.08);
+}
+
+/* Night 主题滚动栏（深色） */
+body.night-theme #editor::-webkit-scrollbar-thumb,
+body.night-theme .preview-pane::-webkit-scrollbar-thumb,
+body.night-theme .result-pane::-webkit-scrollbar-thumb {
+  background: rgba(201, 209, 217, 0.3);
+}
+
+body.night-theme #editor::-webkit-scrollbar-thumb:hover,
+body.night-theme .preview-pane::-webkit-scrollbar-thumb:hover,
+body.night-theme .result-pane::-webkit-scrollbar-thumb:hover {
+  background: rgba(201, 209, 217, 0.5);
+}
+
+body.night-theme #editor::-webkit-scrollbar-track,
+body.night-theme .preview-pane::-webkit-scrollbar-track,
+body.night-theme .result-pane::-webkit-scrollbar-track {
+  background: transparent;
+  border-left: 1px solid rgba(201, 209, 217, 0.1);
+}
+
+/* Pixyll 主题滚动栏 */
+body.pixyll-theme #editor::-webkit-scrollbar-thumb,
+body.pixyll-theme .preview-pane::-webkit-scrollbar-thumb,
+body.pixyll-theme .result-pane::-webkit-scrollbar-thumb {
+  background: rgba(44, 62, 80, 0.2);
+}
+
+body.pixyll-theme #editor::-webkit-scrollbar-thumb:hover,
+body.pixyll-theme .preview-pane::-webkit-scrollbar-thumb:hover,
+body.pixyll-theme .result-pane::-webkit-scrollbar-thumb:hover {
+  background: rgba(44, 62, 80, 0.35);
+}
+
+body.pixyll-theme #editor::-webkit-scrollbar-track,
+body.pixyll-theme .preview-pane::-webkit-scrollbar-track,
+body.pixyll-theme .result-pane::-webkit-scrollbar-track {
+  background: transparent;
+  border-left: 1px solid rgba(44, 62, 80, 0.05);
+}
+
+/* Whitey 主题滚动栏 */
+body.whitey-theme #editor::-webkit-scrollbar-thumb,
+body.whitey-theme .preview-pane::-webkit-scrollbar-thumb,
+body.whitey-theme .result-pane::-webkit-scrollbar-thumb {
+  background: rgba(17, 17, 17, 0.2);
+}
+
+body.whitey-theme #editor::-webkit-scrollbar-thumb:hover,
+body.whitey-theme .preview-pane::-webkit-scrollbar-thumb:hover,
+body.whitey-theme .result-pane::-webkit-scrollbar-thumb:hover {
+  background: rgba(17, 17, 17, 0.35);
+}
+
+body.whitey-theme #editor::-webkit-scrollbar-track,
+body.whitey-theme .preview-pane::-webkit-scrollbar-track,
+body.whitey-theme .result-pane::-webkit-scrollbar-track {
+  background: transparent;
+  border-left: 1px solid rgba(17, 17, 17, 0.05);
 }
 

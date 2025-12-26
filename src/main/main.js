@@ -1,9 +1,12 @@
-const { app, BrowserWindow, Menu, shell, dialog } = require('electron');
+const { app, BrowserWindow, Menu, shell, dialog, ipcMain } = require('electron');
 
 const path = require('path');
 const fs = require('fs');
+const mammoth = require('mammoth');
+const TurndownService = require('turndown');
 
 let mainWindow;
+let preferencesWindow = null;
 let fileToOpen = null;
 let newMdPath = null;
 
@@ -11,6 +14,7 @@ function createWindow(filePath = null) {
   mainWindow = new BrowserWindow({
     width: 1280,
     height: 800,
+    icon: path.join(__dirname, '../../pack/electron/icon/icon.jpg'),
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       nodeIntegration: true,
@@ -84,6 +88,179 @@ function createNewMdFile(targetDir) {
   }
 }
 
+// 从txt文件导入内容
+async function importFromFile() {
+  if (!mainWindow) return;
+  
+  try {
+    const result = await dialog.showOpenDialog(mainWindow, {
+      title: '选择要导入的txt文件',
+      filters: [
+        { name: '文本文件', extensions: ['txt'] }
+      ],
+      properties: ['openFile']
+    });
+
+    if (result.canceled || !result.filePaths || result.filePaths.length === 0) {
+      return;
+    }
+
+    const filePath = result.filePaths[0];
+    
+    if (!fs.existsSync(filePath)) {
+      dialog.showErrorBox('错误', '文件不存在');
+      return;
+    }
+
+    // 尝试以 UTF-8 编码读取文件
+    let content;
+    try {
+      content = fs.readFileSync(filePath, 'utf-8');
+    } catch (encodingError) {
+      // 如果 UTF-8 读取失败，尝试其他编码
+      try {
+        content = fs.readFileSync(filePath, 'latin1');
+      } catch (error) {
+        throw new Error('无法读取文件，可能是不支持的编码格式');
+      }
+    }
+
+    // 发送导入的内容到渲染进程
+    mainWindow.webContents.send('file-imported', {
+      content: content,
+      sourcePath: filePath
+    });
+  } catch (error) {
+    console.error('导入文件失败:', error);
+    dialog.showErrorBox('错误', `无法导入文件: ${error.message}`);
+  }
+}
+
+// 从Word文档导入内容
+async function importFromWord() {
+  if (!mainWindow) return;
+  
+  try {
+    const result = await dialog.showOpenDialog(mainWindow, {
+      title: '选择要导入的Word文档',
+      filters: [
+        { name: 'Word文档', extensions: ['docx'] },
+        { name: '所有文件', extensions: ['*'] }
+      ],
+      properties: ['openFile']
+    });
+
+    if (result.canceled || !result.filePaths || result.filePaths.length === 0) {
+      return;
+    }
+
+    const filePath = result.filePaths[0];
+    
+    if (!fs.existsSync(filePath)) {
+      dialog.showErrorBox('错误', '文件不存在');
+      return;
+    }
+
+    // 读取Word文档并转换为Markdown
+    const buffer = fs.readFileSync(filePath);
+    const result_mammoth = await mammoth.convertToMarkdown({ buffer: buffer });
+    
+    let content = result_mammoth.value;
+    
+    // 如果有警告信息，记录但不阻止导入
+    if (result_mammoth.messages && result_mammoth.messages.length > 0) {
+      console.warn('Word导入警告:', result_mammoth.messages);
+    }
+
+    // 发送导入的内容到渲染进程
+    mainWindow.webContents.send('file-imported', {
+      content: content,
+      sourcePath: filePath
+    });
+  } catch (error) {
+    console.error('导入Word文档失败:', error);
+    dialog.showErrorBox('错误', `无法导入Word文档: ${error.message}`);
+  }
+}
+
+// 从HTML文件导入内容
+async function importFromHTML() {
+  if (!mainWindow) return;
+  
+  try {
+    const result = await dialog.showOpenDialog(mainWindow, {
+      title: '选择要导入的HTML文件',
+      filters: [
+        { name: 'HTML文件', extensions: ['html', 'htm'] },
+        { name: '所有文件', extensions: ['*'] }
+      ],
+      properties: ['openFile']
+    });
+
+    if (result.canceled || !result.filePaths || result.filePaths.length === 0) {
+      return;
+    }
+
+    const filePath = result.filePaths[0];
+    
+    if (!fs.existsSync(filePath)) {
+      dialog.showErrorBox('错误', '文件不存在');
+      return;
+    }
+
+    // 尝试以 UTF-8 编码读取文件
+    let htmlContent;
+    try {
+      htmlContent = fs.readFileSync(filePath, 'utf-8');
+    } catch (encodingError) {
+      // 如果 UTF-8 读取失败，尝试其他编码
+      try {
+        htmlContent = fs.readFileSync(filePath, 'latin1');
+      } catch (error) {
+        throw new Error('无法读取文件，可能是不支持的编码格式');
+      }
+    }
+
+    // 使用TurndownService将HTML转换为Markdown
+    const turndownService = new TurndownService({
+      headingStyle: 'atx', // 使用 # 风格的标题
+      codeBlockStyle: 'fenced', // 使用 ``` 风格的代码块
+      bulletListMarker: '-', // 使用 - 作为列表标记
+      emDelimiter: '*', // 使用 * 作为斜体标记
+      strongDelimiter: '**', // 使用 ** 作为粗体标记
+      linkStyle: 'inlined', // 使用内联链接样式
+      linkReferenceStyle: 'full' // 使用完整引用样式
+    });
+
+    // 配置TurndownService以保留更多格式
+    turndownService.addRule('strikethrough', {
+      filter: ['del', 's', 'strike'],
+      replacement: function (content) {
+        return '~~' + content + '~~';
+      }
+    });
+
+    turndownService.addRule('underline', {
+      filter: 'u',
+      replacement: function (content) {
+        return '<u>' + content + '</u>';
+      }
+    });
+
+    // 转换HTML为Markdown
+    const markdownContent = turndownService.turndown(htmlContent);
+
+    // 发送导入的内容到渲染进程
+    mainWindow.webContents.send('file-imported', {
+      content: markdownContent,
+      sourcePath: filePath
+    });
+  } catch (error) {
+    console.error('导入HTML文件失败:', error);
+    dialog.showErrorBox('错误', `无法导入HTML文件: ${error.message}`);
+  }
+}
+
 function createAppMenu() {
   const template = [
     {
@@ -116,8 +293,9 @@ function createAppMenu() {
         {
           label: '导入...',
           submenu: [
-            { label: '从 Word 导入...', click: () => sendToRenderer('file-import-word') },
-            { label: '从 HTML 导入...', click: () => sendToRenderer('file-import-html') }
+            { label: '从txt中导入...', click: () => importFromFile() },
+            { label: '从 Word 导入...', click: () => importFromWord() },
+            { label: '从 HTML 导入...', click: () => importFromHTML() }
           ]
         },
         {
@@ -145,7 +323,7 @@ function createAppMenu() {
         },
         { label: '打印...', accelerator: 'Alt+Shift+P', click: () => sendToRenderer('file-print') },
         { type: 'separator' },
-        { label: '偏好设置...', accelerator: 'Ctrl+,', click: () => sendToRenderer('file-preferences') },
+        { label: '偏好设置...', accelerator: 'Ctrl+,', click: () => createPreferencesWindow() },
         { type: 'separator' },
         { label: '关闭', accelerator: 'Ctrl+W', click: () => sendToRenderer('file-close') }
       ]
@@ -535,6 +713,328 @@ function createAppMenu() {
 
 function sendToRenderer(channel, payload) {
   mainWindow?.webContents.send(channel, payload);
+}
+
+// 创建偏好设置窗口
+function createPreferencesWindow() {
+  // 如果窗口已存在，则聚焦
+  if (preferencesWindow) {
+    preferencesWindow.focus();
+    return;
+  }
+
+  preferencesWindow = new BrowserWindow({
+    width: 900,
+    height: 600,
+    parent: mainWindow,
+    modal: false,
+    icon: path.join(__dirname, '../../pack/electron/icon/icon.jpg'),
+    webPreferences: {
+      nodeIntegration: true,
+      contextIsolation: false
+    },
+    title: '偏好设置',
+    resizable: true,
+    minimizable: true,
+    maximizable: true
+  });
+
+  preferencesWindow.loadFile(path.join(__dirname, '../preferences/preferences.html'));
+
+  preferencesWindow.on('closed', () => {
+    preferencesWindow = null;
+  });
+
+  // 移除菜单栏
+  preferencesWindow.setMenuBarVisibility(false);
+}
+
+// IPC 事件处理
+ipcMain.on('open-themes-folder', () => {
+  // 打开主题文件夹（这里可以根据实际需求实现）
+  const themesPath = path.join(app.getPath('userData'), 'themes');
+  if (!fs.existsSync(themesPath)) {
+    fs.mkdirSync(themesPath, { recursive: true });
+  }
+  shell.openPath(themesPath);
+});
+
+ipcMain.on('open-themes-website', () => {
+  shell.openExternal('https://theme.typora.io/');
+});
+
+ipcMain.on('save-settings', (event, settings) => {
+  // 保存设置到配置文件
+  const settingsPath = path.join(app.getPath('userData'), 'settings.json');
+  try {
+    fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2), 'utf-8');
+  } catch (error) {
+    console.error('保存设置失败:', error);
+  }
+});
+
+ipcMain.on('get-settings', (event) => {
+  // 从配置文件读取设置
+  const settingsPath = path.join(app.getPath('userData'), 'settings.json');
+  try {
+    if (fs.existsSync(settingsPath)) {
+      const settings = JSON.parse(fs.readFileSync(settingsPath, 'utf-8'));
+      event.returnValue = settings;
+    } else {
+      event.returnValue = {};
+    }
+  } catch (error) {
+    console.error('读取设置失败:', error);
+    event.returnValue = {};
+  }
+});
+
+ipcMain.on('open-preferences', () => {
+  createPreferencesWindow();
+});
+
+// 导出为PDF
+ipcMain.handle('export-pdf', async (event, data) => {
+  try {
+    const { filePath, canceled } = await dialog.showSaveDialog(mainWindow, {
+      title: '导出为 PDF',
+      defaultPath: data.defaultFilename + '.pdf',
+      filters: [
+        { name: 'PDF文件', extensions: ['pdf'] }
+      ]
+    });
+
+    if (canceled || !filePath) {
+      return { success: false, cancelled: true };
+    }
+
+    // 创建一个隐藏的窗口用于生成PDF
+    const pdfWindow = new BrowserWindow({
+      show: false,
+      webPreferences: {
+        nodeIntegration: false,
+        contextIsolation: true
+      }
+    });
+
+    // 创建完整的HTML文档
+    const fullHtml = createStyledHtml(data.html, data.title);
+
+    // 加载HTML内容
+    await pdfWindow.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(fullHtml));
+
+    // 等待页面完全加载
+    await new Promise(resolve => setTimeout(resolve, 500));
+
+    // 生成PDF
+    const pdfData = await pdfWindow.webContents.printToPDF({
+      printBackground: true,
+      marginsType: 0,
+      pageSize: 'A4'
+    });
+
+    // 保存PDF
+    fs.writeFileSync(filePath, pdfData);
+    pdfWindow.close();
+
+    return { success: true, path: filePath };
+  } catch (error) {
+    console.error('导出PDF失败:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+// 导出为HTML
+ipcMain.handle('export-html', async (event, data) => {
+  try {
+    const { filePath, canceled } = await dialog.showSaveDialog(mainWindow, {
+      title: '导出为 HTML',
+      defaultPath: data.defaultFilename + '.html',
+      filters: [
+        { name: 'HTML文件', extensions: ['html', 'htm'] }
+      ]
+    });
+
+    if (canceled || !filePath) {
+      return { success: false, cancelled: true };
+    }
+
+    const htmlContent = data.withStyles 
+      ? createStyledHtml(data.html, data.title)
+      : createPlainHtml(data.html, data.title);
+    
+    fs.writeFileSync(filePath, htmlContent, 'utf-8');
+    return { success: true, path: filePath };
+  } catch (error) {
+    console.error('导出HTML失败:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+// 导出为图像
+ipcMain.handle('export-image', async (event, data) => {
+  try {
+    const { filePath, canceled } = await dialog.showSaveDialog(mainWindow, {
+      title: '导出为图像',
+      defaultPath: data.defaultFilename + '.png',
+      filters: [
+        { name: 'PNG图像', extensions: ['png'] },
+        { name: 'JPEG图像', extensions: ['jpg', 'jpeg'] }
+      ]
+    });
+
+    if (canceled || !filePath) {
+      return { success: false, cancelled: true };
+    }
+
+    const image = await mainWindow.webContents.capturePage();
+    const buffer = filePath.toLowerCase().endsWith('.png') 
+      ? image.toPNG() 
+      : image.toJPEG(90);
+    
+    fs.writeFileSync(filePath, buffer);
+    return { success: true, path: filePath };
+  } catch (error) {
+    console.error('导出图像失败:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+// 导出为Markdown
+ipcMain.handle('export-markdown', async (event, data) => {
+  try {
+    const { filePath, canceled } = await dialog.showSaveDialog(mainWindow, {
+      title: '导出为 Markdown',
+      defaultPath: data.defaultFilename + '.md',
+      filters: [
+        { name: 'Markdown文件', extensions: ['md', 'markdown'] }
+      ]
+    });
+
+    if (canceled || !filePath) {
+      return { success: false, cancelled: true };
+    }
+
+    fs.writeFileSync(filePath, data.content, 'utf-8');
+    return { success: true, path: filePath };
+  } catch (error) {
+    console.error('导出Markdown失败:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+// 创建带样式的HTML
+function createStyledHtml(content, title = '未命名') {
+  return `<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${title}</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #fff;
+        }
+        h1, h2, h3, h4, h5, h6 {
+            margin-top: 24px;
+            margin-bottom: 16px;
+            font-weight: 600;
+            line-height: 1.25;
+        }
+        h1 { font-size: 2em; border-bottom: 2px solid #eee; padding-bottom: 0.3em; }
+        h2 { font-size: 1.5em; border-bottom: 1px solid #eee; padding-bottom: 0.3em; }
+        h3 { font-size: 1.25em; }
+        h4 { font-size: 1em; }
+        h5 { font-size: 0.875em; }
+        h6 { font-size: 0.85em; color: #666; }
+        p { margin-bottom: 16px; }
+        code {
+            background: #f6f8fa;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.9em;
+        }
+        pre {
+            background: #f6f8fa;
+            padding: 16px;
+            border-radius: 6px;
+            overflow: auto;
+        }
+        pre code {
+            background: none;
+            padding: 0;
+        }
+        blockquote {
+            border-left: 4px solid #ddd;
+            padding-left: 16px;
+            color: #666;
+            margin: 16px 0;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 16px 0;
+        }
+        table th, table td {
+            border: 1px solid #ddd;
+            padding: 8px 12px;
+            text-align: left;
+        }
+        table th {
+            background: #f6f8fa;
+            font-weight: 600;
+        }
+        ul, ol {
+            padding-left: 2em;
+            margin: 16px 0;
+        }
+        li {
+            margin: 4px 0;
+        }
+        a {
+            color: #0366d6;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        img {
+            max-width: 100%;
+            height: auto;
+        }
+        hr {
+            border: none;
+            border-top: 2px solid #eee;
+            margin: 24px 0;
+        }
+    </style>
+</head>
+<body>
+${content}
+</body>
+</html>`;
+}
+
+// 创建纯HTML
+function createPlainHtml(content, title = '未命名') {
+  return `<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${title}</title>
+</head>
+<body>
+${content}
+</body>
+</html>`;
 }
 
 // 处理命令行参数

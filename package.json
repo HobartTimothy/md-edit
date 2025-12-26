@@ -32,7 +32,7 @@
           ]
         }
       ],
-      "icon": "build/icon.ico"
+      "icon": "pack/electron/icon/icon.jpg"
     },
     "nsis": {
       "oneClick": false,
@@ -41,9 +41,9 @@
       "createStartMenuShortcut": true,
       "shortcutName": "md-edit",
       "include": "build/installer.nsh",
-      "installerIcon": "build/icon.ico",
-      "uninstallerIcon": "build/icon.ico",
-      "installerHeaderIcon": "build/icon.ico"
+      "installerIcon": "pack/electron/icon/icon.jpg",
+      "uninstallerIcon": "pack/electron/icon/icon.jpg",
+      "installerHeaderIcon": "pack/electron/icon/icon.jpg"
     }
   },
   "devDependencies": {
@@ -51,6 +51,8 @@
     "electron-builder": "^26.0.12"
   },
   "dependencies": {
-    "marked": "^12.0.0"
+    "mammoth": "^1.11.0",
+    "marked": "^12.0.0",
+    "turndown": "^7.2.2"
   }
 }

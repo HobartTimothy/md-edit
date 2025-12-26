@@ -1,5 +1,6 @@
 const { marked } = require('marked');
 const { ipcRenderer } = require('electron');
+const path = require('path');
 
 const editor = document.getElementById('editor');
 const preview = document.getElementById('preview');
@@ -8,6 +9,7 @@ const appRoot = document.getElementById('app-root');
 
 // 当前模式：'split'（对比模式）、'source'（源代码模式）、'result'（结果模式）
 let currentMode = 'split';
+let currentFilePath = null;
 
 function renderMarkdown(text) {
   const rawHtml = marked.parse(text || '');
@@ -275,6 +277,117 @@ function notImplemented(featureName) {
   alert(`"${featureName}"功能待实现。`);
 }
 
+// 导出辅助函数
+let lastExportSettings = null;
+
+function getExportData() {
+  const content = editor.value;
+  const html = preview.innerHTML;
+  
+  let title = '未命名';
+  let defaultFilename = '未命名';
+  
+  if (currentFilePath) {
+    const parsedPath = path.parse(currentFilePath);
+    title = parsedPath.name;
+    defaultFilename = parsedPath.name;
+  }
+  
+  return {
+    content,
+    html,
+    title,
+    defaultFilename
+  };
+}
+
+async function exportToPDF() {
+  const data = getExportData();
+  
+  const result = await ipcRenderer.invoke('export-pdf', data);
+  
+  if (result.success) {
+    alert('PDF导出成功！\n保存位置：' + result.path);
+    lastExportSettings = { type: 'pdf', path: result.path, data };
+  } else if (!result.cancelled) {
+    alert('导出失败：' + (result.error || '未知错误'));
+  }
+}
+
+async function exportToHTML(withStyles = true) {
+  const data = getExportData();
+  data.withStyles = withStyles;
+  
+  const result = await ipcRenderer.invoke('export-html', data);
+  
+  if (result.success) {
+    alert('HTML导出成功！\n保存位置：' + result.path);
+    lastExportSettings = { type: 'html', path: result.path, data };
+  } else if (!result.cancelled) {
+    alert('导出失败：' + (result.error || '未知错误'));
+  }
+}
+
+async function exportToImage() {
+  const data = getExportData();
+  
+  const result = await ipcRenderer.invoke('export-image', data);
+  
+  if (result.success) {
+    alert('图像导出成功！\n保存位置：' + result.path);
+    lastExportSettings = { type: 'image', path: result.path, data };
+  } else if (!result.cancelled) {
+    alert('导出失败：' + (result.error || '未知错误'));
+  }
+}
+
+async function exportToMarkdown() {
+  const data = getExportData();
+  
+  const result = await ipcRenderer.invoke('export-markdown', data);
+  
+  if (result.success) {
+    alert('Markdown导出成功！\n保存位置：' + result.path);
+    lastExportSettings = { type: 'markdown', path: result.path, data };
+  } else if (!result.cancelled) {
+    alert('导出失败：' + (result.error || '未知错误'));
+  }
+}
+
+async function exportWithLastSettings() {
+  if (!lastExportSettings) {
+    alert('没有上一次的导出设置');
+    return;
+  }
+  
+  const { type } = lastExportSettings;
+  switch (type) {
+    case 'pdf':
+      await exportToPDF();
+      break;
+    case 'html':
+      await exportToHTML(lastExportSettings.data.withStyles);
+      break;
+    case 'image':
+      await exportToImage();
+      break;
+    case 'markdown':
+      await exportToMarkdown();
+      break;
+    default:
+      alert('不支持的导出格式');
+  }
+}
+
+async function exportAndOverwrite() {
+  if (!lastExportSettings || !lastExportSettings.path) {
+    alert('没有上一次的导出文件');
+    return;
+  }
+  
+  alert('覆盖导出功能待实现');
+}
+
 // 辅助函数：插入链接
 function insertLink() {
   const url = window.prompt('输入链接地址：', 'https://');
@@ -320,12 +433,18 @@ const commandHandlers = {
   'file-open-location': () => notImplemented('打开文件位置'),
   'file-show-sidebar': () => notImplemented('在侧边栏中显示'),
   'file-delete': () => notImplemented('删除文件'),
-  'file-import-word': () => notImplemented('从 Word 导入'),
-  'file-import-html': () => notImplemented('从 HTML 导入'),
-  'file-export-pdf': () => notImplemented('导出为 PDF'),
-  'file-export-html': () => notImplemented('导出为 HTML'),
-  'file-export-html-plain': () => notImplemented('导出为 HTML (without styles)'),
-  'file-export-image': () => notImplemented('导出为图像'),
+  'file-import-word': () => {
+    // Word导入功能现在由主进程直接处理
+    // 此处理器保留用于向后兼容
+  },
+  'file-import-html': () => {
+    // HTML导入功能现在由主进程直接处理
+    // 此处理器保留用于向后兼容
+  },
+  'file-export-pdf': () => exportToPDF(),
+  'file-export-html': () => exportToHTML(true),
+  'file-export-html-plain': () => exportToHTML(false),
+  'file-export-image': () => exportToImage(),
   'file-export-docx': () => notImplemented('导出为 Word (.docx)'),
   'file-export-odt': () => notImplemented('导出为 OpenOffice'),
   'file-export-rtf': () => notImplemented('导出为 RTF'),
@@ -335,11 +454,13 @@ const commandHandlers = {
   'file-export-rst': () => notImplemented('导出为 reStructuredText'),
   'file-export-textile': () => notImplemented('导出为 Textile'),
   'file-export-opml': () => notImplemented('导出为 OPML'),
-  'file-export-last': () => notImplemented('使用上一次设置导出'),
-  'file-export-overwrite': () => notImplemented('导出并覆盖上一次导出的文件'),
+  'file-export-last': () => exportWithLastSettings(),
+  'file-export-overwrite': () => exportAndOverwrite(),
   'file-export-settings': () => notImplemented('导出设置'),
   'file-print': () => notImplemented('打印'),
-  'file-preferences': () => notImplemented('偏好设置'),
+  'file-preferences': () => {
+    ipcRenderer.send('open-preferences');
+  },
   'file-close': () => {
     if (confirm('确定要关闭当前文件吗？')) {
       editor.value = '';
@@ -497,11 +618,36 @@ channels.forEach((ch) => {
 // 处理文件打开事件
 ipcRenderer.on('file-opened', (event, data) => {
   if (data && data.path) {
+    currentFilePath = data.path;
     editor.value = data.content || '';
     renderMarkdown(editor.value);
     editor.focus();
-    // 可以在这里保存当前文件路径，用于后续保存
+    // 保存当前文件路径，用于后续保存和导出
     editor.dataset.currentPath = data.path;
+  }
+});
+
+// 处理文件导入事件
+ipcRenderer.on('file-imported', (event, data) => {
+  if (data && data.content !== undefined) {
+    // 获取当前编辑器内容
+    const currentContent = editor.value || '';
+    
+    // 如果当前内容不为空，在导入内容前添加换行
+    const separator = currentContent && !currentContent.endsWith('\n') ? '\n\n' : '';
+    
+    // 将导入的内容追加到当前内容
+    editor.value = currentContent + separator + data.content;
+    
+    // 更新预览
+    renderMarkdown(editor.value);
+    
+    // 将光标移动到文档末尾
+    editor.focus();
+    editor.selectionStart = editor.selectionEnd = editor.value.length;
+    
+    // 滚动到底部
+    editor.scrollTop = editor.scrollHeight;
   }
 });
 
